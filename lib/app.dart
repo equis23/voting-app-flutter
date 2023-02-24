@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:voting_app/screens/home.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
@@ -7,14 +8,10 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'voting app',
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('voting app'),
-        ),
-        body: const Center(
-          child: Text('here goes the data'),
-        ),
-      ),
+      initialRoute: 'home',
+      routes: {
+        'home': (context) => const HomePage(),
+      },
     );
   }
 }
