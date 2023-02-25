@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:voting_app/screens/home.dart';
+import 'package:voting_app/screens/screens.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
@@ -7,6 +7,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'voting app',
       initialRoute: 'home',
       routes: {
