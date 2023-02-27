@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk&display=swap');
+    body {
+      font-family: 'Roboto', sans-serif;
+    }
+  </style>
+</head>
+<body>
+  <h1>aqui se escucha al evento emitido desde el dispositivo android</h1>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    const socket = io();
+
+    socket.on('server:beep', (payload) => {
+      Swal.fire({
+        toast: true,
+        icon: 'info',
+        title: payload.message,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+        toast.addEventListener('mouseenter', Swal.stopTimer)
+        toast.addEventListener('mouseleave', Swal.resumeTimer)
+        }
+      });
+    });
+
+    socket.on('server:init', (payload) => {
+      // console.clear();
+      console.table(payload);
+    });
+  </script>
+</body>
+</html>

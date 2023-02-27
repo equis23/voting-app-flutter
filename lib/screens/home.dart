@@ -1,5 +1,8 @@
+import 'package:uuid/uuid.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:voting_app/models/band.dart';
+import 'package:voting_app/services/socket_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -9,26 +12,55 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  List<Band> bands = [
-    Band.fromMap({"id": '1', "name": "Widget A", "votes": 42}),
-    Band.fromMap({"id": '2', "name": "Gizmo B", "votes": 21}),
-    Band.fromMap({"id": '3', "name": "Thingamajig C", "votes": 7}),
-    Band.fromMap({"id": '4', "name": "Doohickey D", "votes": 15}),
-    Band.fromMap({"id": '5', "name": "Whatchamacallit E", "votes": 3}),
-    Band.fromMap({"id": '6', "name": "Doodad F", "votes": 27}),
-    Band.fromMap({"id": '7', "name": "Gadget G", "votes": 11}),
-    Band.fromMap({"id": '8', "name": "Contraption H", "votes": 8}),
-    Band.fromMap({"id": '9', "name": "Apparatus I", "votes": 36}),
-    Band.fromMap({"id": '10', "name": "Gizmo J", "votes": 19})
-  ];
+  List<Band> bands = [];
+
+  @override
+  void initState() {
+    final SocketService socketServer =
+        Provider.of<SocketService>(context, listen: false);
+    socketServer.socket.on('server:init', _handlePayload);
+    super.initState();
+  }
+
+  _handlePayload(dynamic payload) {
+    print(payload);
+    setState(() {
+      bands = (payload as List).map((band) => Band.fromMap(band)).toList();
+    });
+  }
+
+  @override
+  void dispose() {
+    final SocketService socketService =
+        Provider.of<SocketService>(context, listen: false);
+    socketService.socket.off('server:init');
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final SocketService socketService = Provider.of<SocketService>(context);
+
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.white,
         title: const Text(
           'home page',
+          style: TextStyle(
+            color: Colors.black87,
+          ),
         ),
+        actions: [
+          (socketService.serverStatus == ServerStatus.online)
+              ? const Icon(
+                  Icons.check_circle,
+                  color: Colors.green,
+                )
+              : const Icon(
+                  Icons.highlight_off,
+                  color: Colors.red,
+                )
+        ],
       ),
       body: ListView.builder(
         itemCount: bands.length,
@@ -61,11 +93,11 @@ class _HomePageState extends State<HomePage> {
           band.name,
         ),
         trailing: Text(
-          band.vote.toString(),
+          band.votes.toString(),
         ),
         onTap: () {
           setState(() {
-            band.vote += 1;
+            band.votes += 1;
           });
         },
       ),
@@ -96,40 +128,52 @@ class _HomePageState extends State<HomePage> {
       },
     );
   }
-}
 
-void addNewBand(BuildContext context) {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: const Text('add new band'),
-        content: const Text(
-          'here goes the band',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: const Text(
-              'cancel',
-              style: TextStyle(
-                color: Colors.white,
+  void addNewBand(BuildContext context) {
+    final TextEditingController bandName = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('add new band'),
+          content: TextField(
+            controller: bandName,
+            decoration: const InputDecoration(
+              hintText: 'enter here new band\'s name',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text(
+                'cancel',
+                style: TextStyle(
+                  color: Colors.white,
+                ),
+              ),
+              style: ButtonStyle(
+                backgroundColor: MaterialStateProperty.all<Color>(Colors.red),
               ),
             ),
-            style: ButtonStyle(
-              backgroundColor: MaterialStateProperty.all<Color>(Colors.red),
+            TextButton(
+              onPressed: () {
+                if (bandName.text.length > 1) {
+                  setState(() {
+                    bands.add(
+                      Band(
+                          id: const Uuid().v4(), name: bandName.text, votes: 0),
+                    );
+                  });
+                }
+                Navigator.of(context).pop();
+              },
+              child: const Text('ok'),
             ),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: const Text('ok'),
-          ),
-        ],
-      );
-    },
-  );
+          ],
+        );
+      },
+    );
+  }
 }
