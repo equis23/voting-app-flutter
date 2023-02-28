@@ -22,11 +22,13 @@ class Bands {
 
   voteBand(id) {
     for (let i = 0; i < this.bands.length; i++) {
-      if (this.bands[i].id === id) {
-        this.bands[i].vote += 1;
-        return this.bands;
+      let band = this.bands[i];
+      if (band.id === id) {
+        band.votes += 1;
+        break;
       }
     }
+    return this.getBands();
   }
 }
 

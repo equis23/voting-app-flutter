@@ -18,13 +18,14 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     final SocketService socketServer =
         Provider.of<SocketService>(context, listen: false);
-    socketServer.socket.on('server:init', _handlePayload);
+    socketServer.socket.on('server:update', _handlePayload);
     super.initState();
   }
 
-  _handlePayload(dynamic payload) {
-    print(payload);
+  void _handlePayload(dynamic payload) {
     setState(() {
+      // List<dynamic> data = payload;
+      // bands = data.map((band) => Band.fromMap(band)).toList();
       bands = (payload as List).map((band) => Band.fromMap(band)).toList();
     });
   }
@@ -51,15 +52,20 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
         actions: [
-          (socketService.serverStatus == ServerStatus.online)
-              ? const Icon(
-                  Icons.check_circle,
-                  color: Colors.green,
-                )
-              : const Icon(
-                  Icons.highlight_off,
-                  color: Colors.red,
-                )
+          Container(
+            child: (socketService.serverStatus == ServerStatus.online)
+                ? const Icon(
+                    Icons.check_circle,
+                    color: Colors.green,
+                  )
+                : const Icon(
+                    Icons.highlight_off,
+                    color: Colors.red,
+                  ),
+            padding: const EdgeInsets.only(
+              right: 10,
+            ),
+          )
         ],
       ),
       body: ListView.builder(
@@ -81,6 +87,9 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _bandTile(Band band, int index) {
+    final SocketService socketService =
+        Provider.of<SocketService>(context, listen: false);
+
     return Dismissible(
       key: Key(band.id),
       child: ListTile(
@@ -96,9 +105,7 @@ class _HomePageState extends State<HomePage> {
           band.votes.toString(),
         ),
         onTap: () {
-          setState(() {
-            band.votes += 1;
-          });
+          socketService.socket.emit('client:vote', {'id': band.id});
         },
       ),
       background: Container(
@@ -114,9 +121,7 @@ class _HomePageState extends State<HomePage> {
       ),
       direction: DismissDirection.startToEnd,
       onDismissed: (direction) {
-        setState(() {
-          bands.removeAt(index);
-        });
+        socketService.socket.emit('client:delete-band', {'id': band.id});
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -130,6 +135,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   void addNewBand(BuildContext context) {
+    final SocketService socketService =
+        Provider.of<SocketService>(context, listen: false);
     final TextEditingController bandName = TextEditingController();
     showDialog(
       context: context,
@@ -160,12 +167,8 @@ class _HomePageState extends State<HomePage> {
             TextButton(
               onPressed: () {
                 if (bandName.text.length > 1) {
-                  setState(() {
-                    bands.add(
-                      Band(
-                          id: const Uuid().v4(), name: bandName.text, votes: 0),
-                    );
-                  });
+                  socketService.socket
+                      .emit('client:new-band', {'name': bandName.text});
                 }
                 Navigator.of(context).pop();
               },

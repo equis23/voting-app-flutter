@@ -6,18 +6,20 @@ const Band = require('./models/band');
 const Bands = require('./models/bands');
 
 const bands = new Bands();
-[
-  new Band('Widget A'),
-  new Band('Gizmo B'),
-  new Band('Thingamajig C'),
-  new Band('Doohickey D'),
-  new Band('Whatchamacallit E'),
-  new Band('Doodad F'),
-  new Band('Gadget G'),
-  new Band('Contraption H'),
-  new Band('Apparatus I'),
-  new Band('Gizmo J'),
-].forEach((band) => bands.addBand(band));
+const names = [
+  'Widget A',
+  'Gizmo B',
+  'Thingamajig C',
+  'Doohickey D',
+  'Whatchamacallit E',
+  'Doodad F',
+  'Gadget G',
+  'Contraption H',
+  'Apparatus I',
+  'Gizmo J',
+  'Rayados',
+];
+names.forEach((name) => bands.addBand(new Band(name)));
 
 const app = express();
 const server = http.createServer(app);
@@ -25,10 +27,28 @@ const io = new Server(server);
 const port = 8080;
 
 io.on('connection', (socket) => {
-  socket.emit('server:init', bands);
+  socket.emit('server:update', bands.getBands());
 
   socket.on('mobile-client:beep', (payload) => {
     socket.broadcast.emit('server:beep', payload);
+  });
+
+  socket.on('client:vote', (payload) => {
+    console.log(payload.id);
+    console.table(bands.voteBand(payload.id));
+    io.emit('server:update', bands.getBands());
+  });
+
+  socket.on('client:new-band', (payload) => {
+    bands.addBand(new Band(payload.name));
+    console.table(bands.voteBand(payload.id));
+    io.emit('server:update', bands.getBands());
+  });
+
+  socket.on('client:delete-band', (payload) => {
+    bands.deleteBand(payload.id);
+    console.table(bands.getBands);
+    io.emit('server:update');
   });
 });
 

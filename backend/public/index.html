@@ -9,6 +9,7 @@
     @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk&display=swap');
     body {
       font-family: 'Roboto', sans-serif;
+      padding: 2rem;
     }
   </style>
 </head>
@@ -36,8 +37,8 @@
       });
     });
 
-    socket.on('server:init', (payload) => {
-      // console.clear();
+    socket.on('server:update', (payload) => {
+      console.clear();
       console.table(payload);
     });
   </script>
