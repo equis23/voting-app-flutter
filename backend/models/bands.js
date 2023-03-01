@@ -13,9 +13,9 @@ class Bands {
     return this.bands;
   }
 
-  deleteBand(id) {
+  deleteBand(id = '') {
     this.bands = this.bands.filter((band) => {
-      band.id !== id;
+      return band.id !== id;
     });
     return this.bands;
   }

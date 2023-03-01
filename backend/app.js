@@ -46,9 +46,10 @@ io.on('connection', (socket) => {
   });
 
   socket.on('client:delete-band', (payload) => {
+    console.log(payload);
     bands.deleteBand(payload.id);
-    console.table(bands.getBands);
-    io.emit('server:update');
+    console.table(bands.getBands());
+    io.emit('server:update', bands.getBands());
   });
 });
 

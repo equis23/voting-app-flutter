@@ -1,6 +1,6 @@
-import 'package:uuid/uuid.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:pie_chart/pie_chart.dart';
 import 'package:voting_app/models/band.dart';
 import 'package:voting_app/services/socket_service.dart';
 
@@ -68,12 +68,23 @@ class _HomePageState extends State<HomePage> {
           )
         ],
       ),
-      body: ListView.builder(
-        itemCount: bands.length,
-        itemBuilder: (BuildContext context, int index) {
-          final band = bands.elementAt(index);
-          return _bandTile(band, index);
-        },
+      body: Column(
+        children: [
+          Container(
+            height: 300,
+            padding: const EdgeInsets.only(top: 8.0),
+            child: _showGraph(),
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: bands.length,
+              itemBuilder: (BuildContext context, int index) {
+                final band = bands.elementAt(index);
+                return _bandTile(band, index);
+              },
+            ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         child: const Icon(
@@ -104,9 +115,7 @@ class _HomePageState extends State<HomePage> {
         trailing: Text(
           band.votes.toString(),
         ),
-        onTap: () {
-          socketService.socket.emit('client:vote', {'id': band.id});
-        },
+        onTap: () => socketService.socket.emit('client:vote', {'id': band.id}),
       ),
       background: Container(
         color: Colors.red,
@@ -114,9 +123,23 @@ class _HomePageState extends State<HomePage> {
         padding: const EdgeInsets.only(
           left: 10,
         ),
-        child: const Icon(
-          Icons.delete,
-          color: Colors.white,
+        child: Row(
+          children: const [
+            Icon(
+              Icons.delete,
+              color: Colors.white,
+            ),
+            Padding(
+              padding: EdgeInsets.only(left: 4),
+              child: Text(
+                'borrar',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
       direction: DismissDirection.startToEnd,
@@ -177,6 +200,21 @@ class _HomePageState extends State<HomePage> {
           ],
         );
       },
+    );
+  }
+
+  Widget _showGraph() {
+    Map<String, double> dataMap = {};
+    for (var element in bands) {
+      dataMap.putIfAbsent(element.name, () => element.votes.toDouble());
+    }
+    return PieChart(
+      dataMap: dataMap,
+      animationDuration: const Duration(milliseconds: 800),
+      chartValuesOptions: const ChartValuesOptions(
+        showChartValuesInPercentage: true,
+        decimalPlaces: 2,
+      ),
     );
   }
 }
